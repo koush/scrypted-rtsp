@@ -29,7 +29,7 @@
       "@scrypted/sdk": "0.0.63"
    },
    "dependencies": {
-      "axios": "^0.18.1",
+      "axios": "^0.21.1",
       "url-parse": "^1.4.7"
    }
 }
