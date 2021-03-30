@@ -7,7 +7,7 @@ class RtspCamera extends ScryptedDeviceBase implements VideoCamera, Settings {
     constructor(nativeId: string) {
         super(nativeId);
     }
-    getVideoStream(): MediaObject {
+    async getVideoStream(): Promise<MediaObject> {
         var u = this.storage.getItem("url");
         if (u == null) {
             return null;
@@ -16,27 +16,23 @@ class RtspCamera extends ScryptedDeviceBase implements VideoCamera, Settings {
         url.username = this.storage.getItem("username")
         url.password = this.storage.getItem("password");
 
-        if (this.storage.getItem("ffmpeg") === 'true') {
-            return mediaManager.createFFmpegMediaObject({
-                inputArguments: [
-                    "-an",
-                    "-i",
-                    url.toString(),
-                    "-reorder_queue_size",
-                    "1024",
-                    "-max_delay",
-                    "2000000",
-                ]
-            });
-        }
-
-        // mime type will be inferred from the rtsp scheme, and null may be passed.
-        return mediaManager.createMediaObject(url.toString(), null);
+        return mediaManager.createFFmpegMediaObject({
+            inputArguments: [
+                "-i",
+                url.toString(),
+                '-analyzeduration', '15000000',
+                '-probesize', '100000000',
+                "-reorder_queue_size",
+                "1024",
+                "-max_delay",
+                "20000000",
+            ]
+        });
     }
-    getSetting(key: string): string | number {
+    getSetting(key: string): string {
         return this.storage.getItem(key);
     }
-    getSettings(): Setting[] {
+    async getSettings(): Promise<Setting[]> {
         return [
             {
                 key: 'url',
@@ -54,13 +50,6 @@ class RtspCamera extends ScryptedDeviceBase implements VideoCamera, Settings {
                 title: 'Password',
                 value: this.getSetting('password'),
                 type: 'Password',
-            },
-            {
-                key: 'ffmpeg',
-                title: 'Force FFMPEG',
-                value: this.getSetting('ffmpeg') === 'true',
-                description: "Use ffmpeg instead of built in RTSP decoder.",
-                type: 'Boolean',
             }
         ];
     }
@@ -73,7 +62,7 @@ class RtspProvider extends ScryptedDeviceBase implements DeviceProvider, Setting
     getSetting(key: string): string | number {
         return null;
     }
-    getSettings(): Setting[] {
+    async getSettings(): Promise<Setting[]> {
         return [
             {
                 key: 'new-camera',
