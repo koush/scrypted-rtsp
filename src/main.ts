@@ -53,12 +53,26 @@ class RtspCamera extends ScryptedDeviceBase implements VideoCamera, Settings {
             }
         ];
     }
-    putSetting(key: string, value: string | number): void {
+    async putSetting(key: string, value: string | number) {
         this.storage.setItem(key, value.toString());
     }
 }
 
 class RtspProvider extends ScryptedDeviceBase implements DeviceProvider, Settings {
+    constructor() {
+        super();
+        const deviceIds = deviceManager.getNativeIds();
+        for (const nativeId of deviceIds) {
+            if (nativeId) {
+                deviceManager.onDeviceDiscovered({
+                    nativeId,
+                    interfaces: ["VideoCamera", "Settings"],
+                    type: ScryptedDeviceType.Camera,
+                });
+            }
+        }
+    }
+
     getSetting(key: string): string | number {
         return null;
     }
@@ -71,7 +85,7 @@ class RtspProvider extends ScryptedDeviceBase implements DeviceProvider, Setting
             }
         ]
     }
-    putSetting(key: string, value: string | number): void {
+    async putSetting(key: string, value: string | number) {
             // generate a random id
         var nativeId = Math.random().toString();
         var name = value.toString();
@@ -83,12 +97,11 @@ class RtspProvider extends ScryptedDeviceBase implements DeviceProvider, Setting
             type: ScryptedDeviceType.Camera,
         });
 
-        var camera = new RtspCamera(nativeId);
         var text = `New RTSP Camera ${name} ready. Check the notification area to complete setup.`;
         log.a(text);
         log.clearAlert(text);
     }
-    discoverDevices(duration: number): void {
+    async discoverDevices(duration: number) {
     }
 
     getDevice(nativeId: string): object {
